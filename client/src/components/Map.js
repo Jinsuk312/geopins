@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ReactMapGL from 'react-map-gl';
+import ReactMapGL, { NavigationControl } from 'react-map-gl';
 import { withStyles } from '@material-ui/core/styles';
 // import Button from "@material-ui/core/Button";
 // import Typography from "@material-ui/core/Typography";
@@ -20,7 +20,13 @@ const Map = ({ classes }) => {
 				mapboxApiAccessToken="pk.eyJ1Ijoiamluc3VrbWlrIiwiYSI6ImNqdGR3a3JyeDFjMGg0M2w2Z3dpZno2dXcifQ.oZJB1kAkWUFczFPIuDmdPw"
 				onViewportChange={newViewport => setViewport(newViewport)}
 				{...viewport}
-			/>
+			>
+				<div className={classes.NavigationControl}>
+					<NavigationControl
+						onViewportChange={newViewport => setViewport(newViewport)}
+					/>
+				</div>
+			</ReactMapGL>
 		</div>
 	);
 };
