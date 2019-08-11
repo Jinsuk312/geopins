@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ReactMapGL, { NavigationControl } from 'react-map-gl';
+import ReactMapGL, { NavigationControl, Marker } from 'react-map-gl';
 import { withStyles } from '@material-ui/core/styles';
+import PinIcon from './PinIcon';
 // import Button from "@material-ui/core/Button";
 // import Typography from "@material-ui/core/Typography";
 // import DeleteIcon from "@material-ui/icons/DeleteTwoTone";
@@ -35,11 +36,23 @@ const Map = ({ classes }) => {
 				onViewportChange={newViewport => setViewport(newViewport)}
 				{...viewport}
 			>
+				{/* navigation */}
 				<div className={classes.navigationControl}>
 					<NavigationControl
 						onViewportChange={newViewport => setViewport(newViewport)}
 					/>
 				</div>
+				{/*pin for user current location */}
+				{userPosition && (
+					<Marker
+						latitude={userPosition.latitude}
+						longitude={userPosition.longitude}
+						offsetLeft={-19}
+						offsetTop={-37}
+					>
+						<PinIcon size={40} color="red" />
+					</Marker>
+				)}
 			</ReactMapGL>
 		</div>
 	);
