@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -7,12 +8,20 @@ import AddAPhotoIcon from '@material-ui/icons/AddAPhotoTwoTone';
 import LandscapeIcon from '@material-ui/icons/LandscapeOutlined';
 import ClearIcon from '@material-ui/icons/Clear';
 import SaveIcon from '@material-ui/icons/SaveTwoTone';
+import { unstable_useMediaQuery as useMediaQuery } from '@material-ui/core/useMediaQuery';
+
 import Context from '../../context';
+import { useClient } from '../../client';
+import { CREATE_PIN_MUTATION } from '../../graphql/mutations';
+
 const CreatePin = ({ classes }) => {
-	const { dispatch } = useContext(Context);
+	const mobileSize = useMediaQuery('(max-width: 650px)');
+	const client = useClient();
+	const { state, dispatch } = useContext(Context);
 	const [title, setTitle] = useState('');
 	const [image, setImage] = useState('');
 	const [content, setContent] = useState('');
+	const [submitting, setSubmitting] = useState(false);
 
 	const handleDeleteDraft = () => {
 		setTitle('');
@@ -20,10 +29,34 @@ const CreatePin = ({ classes }) => {
 		setContent('');
 		dispatch({ type: 'DELETE_DRAFT' });
 	};
-	const handleSubmit = event => {
-		event.preventDefault();
-		console.log({ title, image, content });
+
+	const handleImageUpload = async () => {
+		const data = new FormData();
+		data.append('file', image);
+		data.append('upload_preset', 'geopins');
+		data.append('cloud_name', 'reedbargercodes');
+		const res = await axios.post(
+			'https://api.cloudinary.com/v1_1/reedbargercodes/image/upload',
+			data
+		);
+		return res.data.url;
 	};
+
+	const handleSubmit = async event => {
+		try {
+			event.preventDefault();
+			setSubmitting(true);
+			const url = await handleImageUpload();
+			const { latitude, longitude } = state.draft;
+			const variables = { title, image: url, content, latitude, longitude };
+			await client.request(CREATE_PIN_MUTATION, variables);
+			handleDeleteDraft();
+		} catch (err) {
+			setSubmitting(false);
+			console.error('Error creating pin', err);
+		}
+	};
+
 	return (
 		<form className={classes.form}>
 			<Typography
@@ -36,10 +69,10 @@ const CreatePin = ({ classes }) => {
 			</Typography>
 			<div>
 				<TextField
-					onChange={e => setTitle(e.target.value)}
 					name="title"
 					label="Title"
-					placeholder="Insert Pin title"
+					placeholder="Insert pin title"
+					onChange={e => setTitle(e.target.value)}
 				/>
 				<input
 					accept="image/*"
@@ -61,10 +94,10 @@ const CreatePin = ({ classes }) => {
 			</div>
 			<div className={classes.contentField}>
 				<TextField
-					name="Content"
+					name="content"
 					label="Content"
 					multiline
-					rows="6"
+					rows={mobileSize ? '3' : '6'}
 					margin="normal"
 					fullWidth
 					variant="outlined"
@@ -82,15 +115,15 @@ const CreatePin = ({ classes }) => {
 					Discard
 				</Button>
 				<Button
-					className={classes.button}
 					type="submit"
+					className={classes.button}
 					variant="contained"
 					color="secondary"
-					disbled={!title.trim() || !content.trim() || !image}
+					disabled={!title.trim() || !content.trim() || !image || submitting}
 					onClick={handleSubmit}
 				>
-					<SaveIcon className={classes.rightIcon} />
 					Submit
+					<SaveIcon className={classes.rightIcon} />
 				</Button>
 			</div>
 		</form>
