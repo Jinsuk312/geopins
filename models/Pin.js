@@ -12,13 +12,11 @@ const PinSchema = new mongoose.Schema(
 			{
 				text: String,
 				createdAt: { type: Date, default: Date.now },
-				author: {
-					type: mongoose.Schema.ObjectId,
-					ref: 'User'
-				}
+				author: { type: mongoose.Schema.ObjectId, ref: 'User' }
 			}
 		]
 	},
 	{ timestamps: true }
 );
+
 module.exports = mongoose.model('Pin', PinSchema);
